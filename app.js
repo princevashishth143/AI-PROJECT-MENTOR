@@ -1,7 +1,7 @@
 // 1. Supabase Initialization
 const SUPABASE_URL = 'https://cqmriruvvtdbkxrqkvzp.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_03GfsS-w14Wa5hlPIrOdSg_B9ixNXNZ';
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxbXJpcnV2dnRkYmt4cnFrdnpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3ODExODQsImV4cCI6MjEwNDM1NzE4NH0.eGhrJA8pO5EVW5k4dzFUgY5P8zf4pup3S6GY7AlrlxA';
+const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // 2. DOM Elements
 const loginModal = document.getElementById('loginModal');
@@ -21,8 +21,8 @@ loginForm.addEventListener('submit', async (e) => {
   const email = document.getElementById('loginEmail').value.trim();
 
   // Save to Database
-  const { error } = await supabase.from('users').insert([{ name, email }]);
-  if (error && error.code !== '23505') { // Ignore duplicate email errors
+  const { error } = await dbClient.from('users').insert([{ name, email }]);
+  if (error && error.code !== '23505') {
     console.error(error);
     alert("Database error. Check console.");
     return;
@@ -34,7 +34,7 @@ loginForm.addEventListener('submit', async (e) => {
   displayUserName.textContent = name;
   
   localStorage.setItem('userEmail', email);
-  loginModal.classList.add('hidden'); // Hide modal
+  loginModal.classList.add('hidden');
 });
 
 // 4. Tab Switching Logic
@@ -54,29 +54,61 @@ btnChat.addEventListener('click', () => {
   document.getElementById('header-text').innerHTML = `<div class="eyebrow">GENERAL AI</div><h1>New Chat</h1><p>General-purpose conversation.</p>`;
 });
 
-// 5. Chat & Database Save Logic
+// 5. Chat & Backend AI Call Logic
 async function handleChatSubmit(e, formId, inputId, containerId, mode) {
   e.preventDefault();
   const input = document.getElementById(inputId);
   const text = input.value.trim();
   if (!text) return;
 
-  // Render on screen
+  // Render User Message on Screen
   const container = document.getElementById(containerId);
   container.innerHTML += `<div class="msg user"><div class="bubble">${text}</div></div>`;
   input.value = '';
   container.scrollTop = container.scrollHeight;
 
-  // Save to Supabase
-  const userEmail = localStorage.getItem('userEmail');
-  const { error } = await supabase.from('chats').insert([{
-    user_email: userEmail,
-    mode: mode,
-    role: 'user',
-    message: text
-  }]);
+  // Render Loading / Thinking Bubble
+  const botLoadingId = 'bot-loading-' + Date.now();
+  container.innerHTML += `<div class="msg bot" id="${botLoadingId}"><div class="bubble">Thinking with Gemini AI...</div></div>`;
+  container.scrollTop = container.scrollHeight;
 
-  if (error) console.error("Error saving chat:", error);
+  const projectName = localStorage.getItem('currentProjectName') || "Software Project";
+
+  try {
+    // Call Live Render Backend
+    const response = await fetch('https://ai-project-mentor-5bka.onrender.com/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, mode: mode === 'mentor' ? 'AI Mentor' : 'General Chat', projectName })
+    });
+
+    const data = await response.json();
+    const botMsgElement = document.getElementById(botLoadingId);
+
+    if (data.reply) {
+      botMsgElement.querySelector('.bubble').textContent = data.reply;
+    } else {
+      botMsgElement.querySelector('.bubble').textContent = data.error || "Failed to get response from AI backend.";
+    }
+
+    // Save Chat to Supabase Database
+    const userEmail = localStorage.getItem('userEmail');
+    await dbClient.from('chats').insert([{
+      user_email: userEmail,
+      mode: mode,
+      role: 'user',
+      message: text
+    }]);
+
+  } catch (err) {
+    console.error("Connection Error:", err);
+    const botMsgElement = document.getElementById(botLoadingId);
+    if (botMsgElement) {
+      botMsgElement.querySelector('.bubble').textContent = "Server connection failed! Please check your network.";
+    }
+  }
+
+  container.scrollTop = container.scrollHeight;
 }
 
 document.getElementById('mentorForm').addEventListener('submit', (e) => 

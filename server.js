@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 if (!GEMINI_API_KEY) {
-  console.error("❌ ERROR: GEMINI_API_KEY .env file me nahi mili!");
+  console.error("❌ ERROR: GEMINI_API_KEY not found in environment variables!");
 } else {
   console.log("✅ GEMINI_API_KEY successfully loaded!");
 }
@@ -27,15 +27,14 @@ app.post('/api/chat', async (req, res) => {
   }
 
   try {
-    let systemInstruction = "You are an advanced and versatile AI assistant. Answer fluently in English or Hindi/Hinglish depending on the user's language.";
+    let systemInstruction = "You are an advanced and versatile AI assistant. Answer fluently in English.";
     
     if (mode === "AI Mentor") {
-      systemInstruction = `You are an expert AI Project Mentor guiding a computer science engineering student for their project '${projectName || "Software Project"}'. Match the user's language (Hindi/Hinglish or English).`;
+      systemInstruction = `You are an expert AI Project Mentor guiding a computer science engineering student for their project '${projectName || "Software Project"}'. Provide professional guidance in English.`;
     }
 
-    // Updated to the current available flash model version
     const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+      model: 'gemini-2.5-flash',
       contents: message,
       config: {
         systemInstruction: systemInstruction,
@@ -57,5 +56,5 @@ app.post('/api/chat', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 APM Secure Backend running on http://localhost:${PORT}`);
+  console.log(`🚀 APM Secure Backend running on port ${PORT}`);
 });

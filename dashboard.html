@@ -129,7 +129,7 @@
   </div>
   
   <label for="view-mentor" class="side-btn" id="btn-mentor">✦ AI Mentor</label>
-  <label for="view-chat" class="side-btn" id="btn-chat">＋ New Chat (Gemini Flash)</label>
+  <label for="view-chat" class="side-btn" id="btn-chat">＋ New Chat</label>
   <label for="view-history" class="side-btn" id="btn-history">◷ History</label>
   <button class="side-btn logout-side-btn" onclick="handleLogout()">⇦ Logout</button>
 </aside>
@@ -192,7 +192,7 @@
       <span class="pill">GEMINI CLONE</span>
     </div>
     <div id="normalChatMessages" class="messages large">
-      <div class="message bot-msg">Hello! Main aapka AI assistant hoon. Aap mujhse coding, song making, ya kisi bhi topic par baat kar sakte hain. Bataiye aaj kya help chahiye?</div>
+      <div class="message bot-msg">Hello! I am your AI assistant. How can I help you with your coding or queries today?</div>
     </div>
     <div class="composer">
       <textarea id="normalMessageInput" rows="1" placeholder="Ask anything to real AI… (Press Enter to send)" onkeydown="handleGeneralKey(event)"></textarea>
@@ -308,7 +308,7 @@
   async function callBackendAPI(message, mode) {
     const projectName = localStorage.getItem('currentProjectName') || "Software Project";
     try {
-      const response = await fetch('http://localhost:3000/api/chat', {
+      const response = await fetch('https://ai-project-mentor-5bka.onrender.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, mode, projectName })
@@ -321,7 +321,7 @@
       }
     } catch (err) {
       console.error("Connection Error:", err);
-      return "Server connection failed! Make sure your Node.js backend is running (node server.js).";
+      return "Server connection failed! Make sure your Node.js backend is running.";
     }
   }
 

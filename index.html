@@ -44,7 +44,6 @@
   <div class="login-container">
     <h2>Welcome To APM</h2>
     
-    <!-- Form submission handled via JavaScript function -->
     <form onsubmit="handleLoginSubmit(event)">
       <div class="input-group">
         <label for="email">Email</label>
@@ -78,37 +77,35 @@
     }
 
     async function handleLoginSubmit(event) {
-      event.preventDefault(); // Page refresh hone se rokenge
+      event.preventDefault();
       
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       
       if(!email || !password) {
-        return alert("Email aur Password dono bharna zaroori hai!");
+        return alert("Failed: Both Email and Password are required!");
       }
 
       if(!dbClient) {
-        return alert("Database client load nahi ho paya!");
+        return alert("Failed: Database client failed to load!");
       }
 
       try {
-        alert("Login request bhej rahe hain...");
-        
         const { data, error } = await dbClient.auth.signInWithPassword({
           email: email,
           password: password
         });
         
         if (error) {
-          alert("Login Error: " + error.message);
+          alert("Failed: " + error.message);
         } else {
-          alert("Login Successful! Dashboard par chal rahe hain.");
+          alert("Successful! Redirecting to dashboard.");
           localStorage.setItem('currentUserEmail', email);
           localStorage.setItem('currentUserName', email.split('@')[0]);
           window.location.href = 'dashboard.html'; 
         }
       } catch (err) {
-        alert("Network Catch Error: " + err.message);
+        alert("Failed: " + err.message);
       }
     }
 
@@ -117,7 +114,7 @@
       const password = document.getElementById('password').value;
       
       if(!email || !password) {
-        return alert("Email aur Password bharna zaroori hai!");
+        return alert("Failed: Both Email and Password are required!");
       }
 
       try {
@@ -128,17 +125,17 @@
         });
         
         if (error) {
-          alert("Supabase Error: " + error.message);
+          alert("Failed: " + error.message);
         } else {
-          alert("Account ban gaya! Login kar sakte hain.");
+          alert("Successful! Account created.");
         }
       } catch (err) {
-        alert("Catch Error: " + err.message);
+        alert("Failed: " + err.message);
       }
     }
 
     function handleForgotPassword() {
-      alert("Reset clicked");
+      alert("Password reset link sent.");
     }
   </script>
 </body>
