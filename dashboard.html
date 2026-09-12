@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>APM – AI Project Mentor (Backend Connected)</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Inter', system-ui, -apple-system, "Segoe UI", sans-serif; background: #f4f3f9; color: #242331; }
+
+  .app-shell { display: flex; min-height: 100vh; }
+
+  /* Sidebar Styling */
+  .sidebar { width: 240px; background: #17151f; color: #fff; padding: 22px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .brand { display: flex; align-items: center; gap: 12px; padding: 4px 10px 25px; }
+  .brand-mark { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; background: linear-gradient(135deg,#7b42f6,#a855f7); font-weight: 800; font-size: 13px; color: #fff; box-shadow: 0 4px 12px rgba(123,66,246,0.4); }
+  .brand strong { display: block; font-size: 14px; }
+  .brand span { display: block; color: #aaa5b6; font-size: 11px; }
+
+  .side-btn { display: block; border: 0; background: transparent; color: #bcb8c8; text-align: left; padding: 12px 14px; border-radius: 10px; font-size: 14px; cursor: pointer; transition: all 0.2s ease; }
+  .side-btn:hover { background: #29223a; color: #fff; }
+  .logout-side-btn { color: #ff6b6b; margin-top: auto; }
+  .logout-side-btn:hover { background: #3a2225; color: #ff4b5c; }
+
+  /* Main Content */
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .topbar { height: 95px; padding: 22px 34px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e9e6ef; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+  .eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 1.4px; color: #8663d5; }
+  .topbar h1 { margin: 2px 0 2px; font-size: 22px; font-weight: 700; color: #1a1824; }
+  .topbar p { margin: 0; color: #8a8793; font-size: 12px; }
+
+  /* Dynamic Avatar */
+  .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #ede5ff, #d8c7ff); color: #7347d6; display: grid; place-items: center; font-weight: 700; font-size: 16px; border: 2px solid #fff; box-shadow: 0 3px 10px rgba(115,71,214,0.18); }
+
+  .view { padding: 28px 34px; flex: 1; }
+  .workspace { display: grid; grid-template-columns: minmax(0,1fr) 340px; gap: 22px; max-width: 1250px; margin: auto; }
+
+  .chat-card, .single-card, .panel-card { background: #fff; border: 1px solid #ebe8f1; border-radius: 17px; box-shadow: 0 8px 30px rgba(39,26,69,.04); }
+  .chat-card { height: calc(100vh - 170px); min-height: 520px; display: flex; flex-direction: column; overflow: hidden; }
+
+  .mode-switch { display: flex; gap: 6px; padding: 12px 18px; border-bottom: 1px solid #eeeaf3; background: #faf9fc; }
+  .mode { border: 0; background: #f0ecf7; color: #777181; border-radius: 9px; padding: 7px 14px; cursor: pointer; font-size: 12px; font-weight: 500; }
+  .mode.active { background: #ede5ff; color: #7040d0; font-weight: 700; }
+
+  .messages { flex: 1; overflow: auto; padding: 25px; display: flex; flex-direction: column; gap: 12px; }
+  .messages.large { min-height: 420px; max-height: calc(100vh - 280px); }
+
+  .message { padding: 12px 16px; border-radius: 12px; max-width: 80%; word-wrap: break-word; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
+  .user-msg { background: #7442d7; color: white; align-self: flex-end; }
+  .bot-msg { background: #f0ecf7; color: #242331; align-self: flex-start; }
+
+  .welcome { text-align: center; max-width: 480px; margin: 90px auto; }
+  .welcome-icon { width: 52px; height: 52px; border-radius: 16px; margin: auto; display: grid; place-items: center; background: #eee6ff; color: #7541d5; font-size: 24px; box-shadow: 0 6px 16px rgba(117,65,213,0.15); }
+  .welcome h2 { margin: 15px 0 8px; font-size: 20px; color: #1a1824; }
+  .welcome p { color: #8a8791; line-height: 1.6; font-size: 13px; }
+
+  .composer { display: flex; gap: 10px; padding: 14px 18px; border-top: 1px solid #eeeaf3; background: #fff; align-items: flex-end; }
+  .composer textarea { flex: 1; border: 1px solid #e5e1eb; border-radius: 12px; resize: none; padding: 11px 14px; outline: none; font: inherit; font-size: 13px; background: #faf9fc; }
+  .composer textarea:focus { border-color: #a487df; background: #fff; }
+  .send { width: 44px; height: 44px; border: 0; border-radius: 12px; background: #7442d7; color: #fff; cursor: pointer; font-size: 16px; display: grid; place-items: center; transition: background 0.2s; }
+  .send:hover { background: #6335be; }
+
+  .right-panel { display: flex; flex-direction: column; gap: 15px; }
+  .panel-card { padding: 18px; }
+  .panel-card h3 { font-size: 14px; margin: 0 0 13px; color: #242331; font-weight: 700; }
+  .panel-heading { display: flex; justify-content: space-between; align-items: center; }
+
+  .small-btn { display: inline-block; border: 1px solid #e4dff0; background: #fff; color: #7442d7; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 12px; font-weight: 600; }
+  .small-btn:hover { background: #f7f4ff; }
+
+  .empty-state { padding: 15px 5px; color: #77717f; }
+  .empty-state strong { display: block; font-size: 13px; color: #383442; }
+  .empty-state span { font-size: 12px; margin-top: 3px; color: #a19ca8; display: block; }
+
+  .action-btn { width: 100%; border: 0; background: #faf9fc; text-align: left; padding: 11px 13px; border-radius: 9px; margin-top: 6px; cursor: pointer; color: #4e4a57; font-size: 12px; font-weight: 500; }
+  .action-btn:hover { background: #f0ebfa; color: #6c3dcc; }
+
+  .single-card { max-width: 1000px; margin: auto; overflow: hidden; background: #fff; border: 1px solid #ebe8f1; border-radius: 17px; }
+  .chat-header { padding: 22px; border-bottom: 1px solid #eeeaf3; display: flex; justify-content: space-between; align-items: center; background: #fff; }
+  .chat-header h2 { margin: 0 0 4px; font-size: 18px; }
+  .chat-header p { margin: 0; color: #898591; font-size: 12px; }
+  .pill { font-size: 10px; font-weight: 800; background: #eee7ff; color: #7542d0; padding: 6px 12px; border-radius: 99px; }
+
+  .history-item { background: #faf9fc; border: 1px solid #eeeaf3; border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .history-item div strong { display: block; font-size: 14px; color: #1a1824; margin-bottom: 3px; }
+  .history-item div span { font-size: 12px; color: #8a8793; }
+
+  /* Modal Styling */
+  .modal-card { width: min(600px, 100%); max-height: 90vh; overflow: auto; background: #fff; border-radius: 20px; padding: 30px; position: relative; box-shadow: 0 25px 70px rgba(0,0,0,0.25); z-index: 21; }
+  .modal-close { position: absolute; right: 20px; top: 20px; border: 0; background: #f4f1f7; width: 32px; height: 32px; border-radius: 10px; font-size: 18px; cursor: pointer; display: grid; place-items: center; color: #555; }
+  .modal-card label { display: block; font-size: 11px; color: #696471; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; }
+  .modal-card input, .modal-card select, .modal-card textarea { width: 100%; margin-top: 5px; border: 1px solid #e2dfe8; border-radius: 10px; padding: 11px 13px; font: inherit; font-size: 13px; outline: none; background: #faf9fc; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .primary { background: #7442d7; color: #fff; border: 0; border-radius: 10px; padding: 13px; cursor: pointer; font-weight: 700; font-size: 14px; width: 100%; margin-top: 10px; }
+
+  .magic-input { display: none; }
+  .view, .header-mentor, .header-chat, .header-history, .modal { display: none; }
+
+  #view-mentor:checked ~ .app-shell .main #mentorView { display: block; }
+  #view-mentor:checked ~ .app-shell .main .topbar .header-mentor { display: block; }
+  #view-mentor:checked ~ .app-shell .sidebar #btn-mentor { background: #29223a; color: #fff; }
+
+  #view-chat:checked ~ .app-shell .main #chatView { display: block; }
+  #view-chat:checked ~ .app-shell .main .topbar .header-chat { display: block; }
+  #view-mentor:checked ~ .app-shell .sidebar #btn-chat { background: #29223a; color: #fff; }
+
+  #view-history:checked ~ .app-shell .main #historyView { display: block; }
+  #view-history:checked ~ .app-shell .main .topbar .header-history { display: block; }
+  #view-history:checked ~ .app-shell .sidebar #btn-history { background: #29223a; color: #fff; }
+
+  #modal-toggle:checked ~ #projectModal {
+    position: fixed; inset: 0; display: grid; place-items: center; padding: 20px; z-index: 20; background: rgba(16,13,24,0.5); backdrop-filter: blur(2px);
+  }
+  .modal-backdrop { position: absolute; inset: 0; cursor: pointer; z-index: -1; }
+</style>
+</head>
+<body>
+
+<input type="radio" name="view-group" id="view-mentor" class="magic-input" checked>
+<input type="radio" name="view-group" id="view-chat" class="magic-input">
+<input type="radio" name="view-group" id="view-history" class="magic-input">
+<input type="checkbox" id="modal-toggle" class="magic-input">
+
+<div class="app-shell">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-mark">APM</div>
+    <div><strong>AI Project Mentor</strong><span>v8.0 Live Backend Connected</span></div>
+  </div>
+  
+  <label for="view-mentor" class="side-btn" id="btn-mentor">✦ AI Mentor</label>
+  <label for="view-chat" class="side-btn" id="btn-chat">＋ New Chat (Gemini Flash)</label>
+  <label for="view-history" class="side-btn" id="btn-history">◷ History</label>
+  <button class="side-btn logout-side-btn" onclick="handleLogout()">⇦ Logout</button>
+</aside>
+
+<main class="main">
+<header class="topbar">
+  <div class="header-mentor"><div class="eyebrow">PROJECT INTELLIGENCE</div><h1>AI Mentor</h1><p>Strict project guidance backed by live Node.js Gemini AI server.</p></div>
+  <div class="header-chat"><div class="eyebrow">GENERAL AI</div><h1>New Chat</h1><p>Open-ended assistant powered by Gemini.</p></div>
+  <div class="header-history"><div class="eyebrow">DATABASE</div><h1>History</h1><p>Secure local conversation logs.</p></div>
+  
+  <div class="avatar" id="userAvatar">U</div>
+</header>
+
+<!-- 1. AI MENTOR VIEW -->
+<section id="mentorView" class="view">
+<div class="workspace">
+<div class="chat-card">
+  <div class="mode-switch"><button class="mode active">AI Mentor (Strict Guardrail + Live API)</button></div>
+  
+  <div id="chatMessages" class="messages">
+    <div class="welcome" id="welcomeBox">
+      <div class="welcome-icon">✦</div>
+      <h2 id="welcomeTitle">Project Mentor</h2>
+      <p>Ask anything about your code, database, bugs, or architecture. Powered by real Gemini LLM backend.</p>
+    </div>
+  </div>
+
+  <div class="composer">
+    <textarea id="messageInput" rows="1" placeholder="Ask about your project, code or bugs… (Press Enter to send)" onkeydown="handleMentorKey(event)"></textarea>
+    <button class="send" type="button" onclick="submitMentor()">➤</button>
+  </div>
+</div>
+
+<aside class="right-panel">
+<div class="panel-card">
+  <div class="panel-heading">
+    <h3>Current Project</h3>
+    <label for="modal-toggle" class="small-btn">＋ New</label>
+  </div>
+  <div id="currentProject" class="empty-state">
+    <strong>No project selected.</strong>
+    <span>Create a project to start.</span>
+  </div>
+</div>
+<div class="panel-card">
+  <h3>Quick Actions</h3>
+  <button class="action-btn" onclick="triggerMentorAction('Recommend Projects')">✦ Recommend Projects</button>
+  <button class="action-btn" onclick="triggerMentorAction('Create Roadmap')">⚑ Create Roadmap</button>
+  <button class="action-btn" onclick="triggerMentorAction('Check Risk Status')">△ Check Risk Status</button>
+</div>
+</aside>
+</div>
+</section>
+
+<!-- 2. GENERAL CHAT VIEW -->
+<section id="chatView" class="view">
+  <div class="single-card">
+    <div class="chat-header">
+      <div><h2>New Chat</h2><p>General purpose assistant — powered by Google Gemini!</p></div>
+      <span class="pill">GEMINI CLONE</span>
+    </div>
+    <div id="normalChatMessages" class="messages large">
+      <div class="message bot-msg">Hello! Main aapka AI assistant hoon. Aap mujhse coding, song making, ya kisi bhi topic par baat kar sakte hain. Bataiye aaj kya help chahiye?</div>
+    </div>
+    <div class="composer">
+      <textarea id="normalMessageInput" rows="1" placeholder="Ask anything to real AI… (Press Enter to send)" onkeydown="handleGeneralKey(event)"></textarea>
+      <button class="send" type="button" onclick="submitGeneral()">➤</button>
+    </div>
+  </div>
+</section>
+
+<!-- 3. HISTORY VIEW -->
+<section id="historyView" class="view">
+  <div class="single-card" style="padding: 25px;">
+    <div class="chat-header" style="padding: 0 0 20px 0; border: none;">
+      <div><h2>Chat History</h2><p>All your past conversations saved securely.</p></div>
+      <button class="small-btn" onclick="clearHistory()" style="color: #ff4b5c; border-color: #ff4b5c;">Clear History</button>
+    </div>
+    <div id="historyList"></div>
+  </div>
+</section>
+</main></div>
+
+<!-- Modal Section for New Project -->
+<div id="projectModal" class="modal">
+  <label for="modal-toggle" class="modal-backdrop"></label>
+  <div class="modal-card">
+    <label for="modal-toggle" class="modal-close">×</label>
+    <div class="eyebrow">PROJECT SETUP</div>
+    <h2>New Project</h2>
+    <p class="muted" style="color: #8e8995; font-size: 12px; margin-bottom: 20px;">Configure your active project scope.</p>
+    
+    <form id="projectForm" onsubmit="handleProjectSubmit(event)">
+      <div class="grid-2">
+        <label>Name<input id="pName" placeholder="Your name" required></label>
+        <label>Semester<input id="pSem" placeholder="Semester"></label>
+      </div>
+      <div class="grid-2">
+        <label>Branch<input id="pBranch" placeholder="Branch"></label>
+        <label>Experience
+          <select id="pExp"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select>
+        </label>
+      </div>
+      <label>Project Name<input id="pProjName" placeholder="AI Student Performance Predictor" required></label>
+      <label>Description<textarea id="pDesc" rows="3" placeholder="What will this project do?"></textarea></label>
+      <button class="primary" type="submit">Save Project</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const userEmail = localStorage.getItem('currentUserEmail');
+    const userName = localStorage.getItem('currentUserName');
+    
+    if (!userEmail) {
+      localStorage.setItem('currentUserEmail', 'student@apm.com');
+      localStorage.setItem('currentUserName', 'Prince Vashishth');
+    }
+
+    const identifier = localStorage.getItem('currentUserName') || "Prince";
+    const firstLetter = identifier.charAt(0).toUpperCase();
+    const avatarEl = document.getElementById('userAvatar');
+    if (avatarEl) avatarEl.innerText = firstLetter;
+
+    const savedProj = localStorage.getItem('currentProjectName');
+    if (savedProj) {
+      document.getElementById('currentProject').innerHTML = `<strong>${savedProj}</strong><span style="color: #2e7d32;">● Active Project</span>`;
+    }
+
+    loadHistory();
+  });
+
+  function saveToHistory(query, response, mode) {
+    let history = JSON.parse(localStorage.getItem('apm_chat_history') || '[]');
+    history.unshift({
+      query: query,
+      response: response,
+      mode: mode,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    });
+    localStorage.setItem('apm_chat_history', JSON.stringify(history));
+    loadHistory();
+  }
+
+  function loadHistory() {
+    const historyList = document.getElementById('historyList');
+    if (!historyList) return;
+    let history = JSON.parse(localStorage.getItem('apm_chat_history') || '[]');
+    
+    if (history.length === 0) {
+      historyList.innerHTML = `<p style="color: #8a8791; font-size: 13px;">No history records found yet. Start a chat!</p>`;
+      return;
+    }
+
+    let html = '';
+    history.forEach(item => {
+      html += `
+        <div class="history-item">
+          <div>
+            <strong>[${item.mode}] Q: ${item.query}</strong>
+            <span>A: ${item.response.substring(0, 90)}...</span>
+          </div>
+          <span style="font-size: 11px; color: #aaa5b6;">${item.time}</span>
+        </div>
+      `;
+    });
+    historyList.innerHTML = html;
+  }
+
+  function clearHistory() {
+    localStorage.removeItem('apm_chat_history');
+    loadHistory();
+  }
+
+  async function callBackendAPI(message, mode) {
+    const projectName = localStorage.getItem('currentProjectName') || "Software Project";
+    try {
+      const response = await fetch('http://localhost:3000/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, mode, projectName })
+      });
+      const data = await response.json();
+      if (data.reply) {
+        return data.reply;
+      } else {
+        return data.error || "Error connecting to AI backend.";
+      }
+    } catch (err) {
+      console.error("Connection Error:", err);
+      return "Server connection failed! Make sure your Node.js backend is running (node server.js).";
+    }
+  }
+
+  // Enter Key Handlers
+  function handleMentorKey(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      submitMentor();
+    }
+  }
+
+  function handleGeneralKey(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      submitGeneral();
+    }
+  }
+
+  async function submitMentor() {
+    const input = document.getElementById('messageInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const chatBox = document.getElementById('chatMessages');
+    const welcomeBox = document.getElementById('welcomeBox');
+    if (welcomeBox) welcomeBox.style.display = 'none';
+
+    const userMsg = document.createElement('div');
+    userMsg.className = 'message user-msg';
+    userMsg.innerText = text;
+    chatBox.appendChild(userMsg);
+
+    input.value = '';
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    const botMsg = document.createElement('div');
+    botMsg.className = 'message bot-msg';
+    botMsg.innerText = "Thinking with Gemini AI...";
+    chatBox.appendChild(botMsg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    const reply = await callBackendAPI(text, "AI Mentor");
+    botMsg.innerText = reply;
+    chatBox.scrollTop = chatBox.scrollHeight;
+    saveToHistory(text, reply, "AI Mentor");
+  }
+
+  async function triggerMentorAction(actionName) {
+    const chatBox = document.getElementById('chatMessages');
+    const welcomeBox = document.getElementById('welcomeBox');
+    if (welcomeBox) welcomeBox.style.display = 'none';
+
+    const userMsg = document.createElement('div');
+    userMsg.className = 'message user-msg';
+    userMsg.innerText = actionName;
+    chatBox.appendChild(userMsg);
+
+    const botMsg = document.createElement('div');
+    botMsg.className = 'message bot-msg';
+    botMsg.innerText = "Generating action report via Gemini AI...";
+    chatBox.appendChild(botMsg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    const reply = await callBackendAPI(`Perform action: ${actionName}`, "AI Mentor");
+    botMsg.innerText = reply;
+    chatBox.scrollTop = chatBox.scrollHeight;
+    saveToHistory(actionName, reply, "AI Mentor Action");
+  }
+
+  async function submitGeneral() {
+    const input = document.getElementById('normalMessageInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const chatBox = document.getElementById('normalChatMessages');
+    
+    const userMsg = document.createElement('div');
+    userMsg.className = 'message user-msg';
+    userMsg.innerText = text;
+    chatBox.appendChild(userMsg);
+
+    input.value = '';
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    const botMsg = document.createElement('div');
+    botMsg.className = 'message bot-msg';
+    botMsg.innerText = "Thinking...";
+    chatBox.appendChild(botMsg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    const reply = await callBackendAPI(text, "General Chat");
+    botMsg.innerText = reply;
+    chatBox.scrollTop = chatBox.scrollHeight;
+    saveToHistory(text, reply, "General Chat");
+  }
+
+  function handleProjectSubmit(event) {
+    event.preventDefault();
+    const projName = document.getElementById('pProjName').value;
+    if (!projName) return;
+
+    localStorage.setItem('currentProjectName', projName);
+    document.getElementById('currentProject').innerHTML = `<strong>${projName}</strong><span style="color: #2e7d32;">● Active Project</span>`;
+    document.getElementById('modal-toggle').checked = false;
+    alert("Project saved successfully!");
+  }
+
+  function handleLogout() {
+    localStorage.clear();
+    alert("Logged out successfully.");
+    window.location.href = 'login.html';
+  }
+</script>
+
+</body>
+</html>
