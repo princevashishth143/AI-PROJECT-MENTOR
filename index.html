@@ -76,11 +76,12 @@
       console.error("Supabase load error:", e);
     }
 
+    // 1. LOGIN LOGIC (Allows only users with verified email to login)
     async function handleLoginSubmit(event) {
       event.preventDefault();
       
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
       
       if(!email || !password) {
         return alert("Failed: Both Email and Password are required!");
@@ -97,7 +98,7 @@
         });
         
         if (error) {
-          alert("Failed: " + error.message);
+          alert("Failed: " + error.message + "\n(Note: Make sure your email is verified from your inbox!)");
         } else {
           alert("Successful! Redirecting to dashboard.");
           localStorage.setItem('currentUserEmail', email);
@@ -109,9 +110,10 @@
       }
     }
 
+    // 2. SIGNUP LOGIC (Sends email verification link upon account creation)
     async function safeSignUp() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
       
       if(!email || !password) {
         return alert("Failed: Both Email and Password are required!");
@@ -127,15 +129,34 @@
         if (error) {
           alert("Failed: " + error.message);
         } else {
-          alert("Successful! Account created.");
+          alert("Successful! Account created. Please check your email inbox to verify your account before logging in.");
         }
       } catch (err) {
         alert("Failed: " + err.message);
       }
     }
 
-    function handleForgotPassword() {
-      alert("Password reset link sent.");
+    // 3. FORGOT PASSWORD LOGIC (Sends password reset link to user email)
+    async function handleForgotPassword() {
+      const email = document.getElementById('email').value.trim();
+      
+      if(!email) {
+        return alert("Failed: Please enter your email address in the email field first to reset password!");
+      }
+
+      try {
+        const { data, error } = await dbClient.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.href,
+        });
+
+        if (error) {
+          alert("Failed: " + error.message);
+        } else {
+          alert("Successful! Password reset link has been sent to your email.");
+        }
+      } catch (err) {
+        alert("Failed: " + err.message);
+      }
     }
   </script>
 </body>
