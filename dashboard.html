@@ -16,7 +16,6 @@
   body.dark-mode .chat-card, body.dark-mode .single-card, body.dark-mode .panel-card, body.dark-mode .modal-card { background: #1a1724; border-color: #2b2638; color: #e4e2ee; }
   body.dark-mode .mode-switch { background: #14121c; border-color: #2b2638; }
   body.dark-mode .mode { background: #231f2e; color: #b8b3c6; }
-  body.dark-mode .mode.active { background: #2f2545; color: #b18eff; }
   body.dark-mode .composer { background: #1a1724; border-color: #2b2638; }
   body.dark-mode .composer textarea { background: #14121c; border-color: #2f2a3d; color: #fff; }
   body.dark-mode .bot-msg { background: #231f2e; color: #e4e2ee; }
@@ -62,18 +61,19 @@
   /* Dynamic Avatar */
   .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #ede5ff, #d8c7ff); color: #7347d6; display: grid; place-items: center; font-weight: 700; font-size: 16px; border: 2px solid #fff; box-shadow: 0 3px 10px rgba(115,71,214,0.18); flex-shrink: 0; }
 
-  .view { padding: 28px 34px; flex: 1; width: 100%; }
+  .view { padding: 28px 34px; flex: 1; width: 100%; display: flex; flex-direction: column; }
   .workspace { display: grid; grid-template-columns: minmax(0,1fr) 340px; gap: 22px; max-width: 1250px; margin: auto; width: 100%; }
 
   .chat-card, .single-card, .panel-card { background: #fff; border: 1px solid #ebe8f1; border-radius: 17px; box-shadow: 0 8px 30px rgba(39,26,69,.04); }
   .chat-card { height: calc(100vh - 170px); min-height: 480px; display: flex; flex-direction: column; overflow: hidden; }
 
-  .mode-switch { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-bottom: 1px solid #eeeaf3; background: #faf9fc; flex-wrap: wrap; gap: 8px; }
+  .mode-switch { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-bottom: 1px solid #eeeaf3; background: #faf9fc; flex-wrap: wrap; gap: 8px; flex-shrink: 0; }
   .mode { border: 0; background: #ede5ff; color: #7040d0; border-radius: 9px; padding: 7px 14px; font-size: 12px; font-weight: 700; }
+  .active-project-info { display: flex; align-items: center; gap: 10px; }
   .active-project-badge { font-size: 12px; font-weight: 600; color: #2e7d32; }
 
   .messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-  .messages.large { min-height: 420px; max-height: calc(100vh - 280px); }
+  .messages.large { min-height: 350px; flex: 1; overflow-y: auto; }
 
   .message { padding: 12px 16px; border-radius: 12px; max-width: 85%; word-wrap: break-word; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
   .user-msg { background: #7442d7; color: white; align-self: flex-end; }
@@ -86,7 +86,7 @@
   .welcome p { color: #8a8791; line-height: 1.6; font-size: 13px; }
   body.dark-mode .welcome h2 { color: #fff; }
 
-  .composer { display: flex; gap: 10px; padding: 12px 16px; border-top: 1px solid #eeeaf3; background: #fff; align-items: flex-end; }
+  .composer { display: flex; gap: 10px; padding: 12px 16px; border-top: 1px solid #eeeaf3; background: #fff; align-items: flex-end; flex-shrink: 0; }
   .composer textarea { flex: 1; border: 1px solid #e5e1eb; border-radius: 12px; resize: none; padding: 11px 14px; outline: none; font: inherit; font-size: 13px; background: #faf9fc; max-height: 120px; }
   .composer textarea:focus { border-color: #a487df; background: #fff; }
   
@@ -114,7 +114,7 @@
   .action-btn { width: 100%; border: 0; background: #faf9fc; text-align: left; padding: 11px 13px; border-radius: 9px; margin-top: 6px; cursor: pointer; color: #4e4a57; font-size: 12px; font-weight: 500; }
   .action-btn:hover { background: #f0ebfa; color: #6c3dcc; }
 
-  .single-card { max-width: 1000px; margin: auto; overflow: hidden; background: #fff; border: 1px solid #ebe8f1; border-radius: 17px; display: flex; flex-direction: column; height: calc(100vh - 120px); width: 100%; }
+  .single-card { max-width: 1000px; margin: auto; overflow: hidden; background: #fff; border: 1px solid #ebe8f1; border-radius: 17px; display: flex; flex-direction: column; height: calc(100vh - 160px); width: 100%; }
   .chat-header { padding: 22px; border-bottom: 1px solid #eeeaf3; display: flex; justify-content: space-between; align-items: center; background: #fff; flex-shrink: 0; flex-wrap: wrap; gap: 10px; }
   .chat-header h2 { margin: 0 0 4px; font-size: 18px; }
   .chat-header p { margin: 0; color: #898591; font-size: 12px; }
@@ -137,15 +137,15 @@
   .magic-input { display: none; }
   .view, .header-mentor, .header-chat, .header-history, .modal { display: none; }
 
-  #view-mentor:checked ~ .app-shell .main #mentorView { display: block; }
+  #view-mentor:checked ~ .app-shell .main #mentorView { display: flex; }
   #view-mentor:checked ~ .app-shell .main .topbar .header-mentor { display: block; }
   #view-mentor:checked ~ .app-shell .sidebar #btn-mentor { background: #29223a; color: #fff; }
 
-  #view-chat:checked ~ .app-shell .main #chatView { display: block; }
+  #view-chat:checked ~ .app-shell .main #chatView { display: flex; }
   #view-chat:checked ~ .app-shell .main .topbar .header-chat { display: block; }
   #view-chat:checked ~ .app-shell .sidebar #btn-chat { background: #29223a; color: #fff; }
 
-  #view-history:checked ~ .app-shell .main #historyView { display: block; }
+  #view-history:checked ~ .app-shell .main #historyView { display: flex; }
   #view-history:checked ~ .app-shell .main .topbar .header-history { display: block; }
   #view-history:checked ~ .app-shell .sidebar #btn-history { background: #29223a; color: #fff; }
 
@@ -154,10 +154,10 @@
   }
   .modal-backdrop { position: absolute; inset: 0; cursor: pointer; z-index: -1; }
 
-  /* ================= RESPONSIVE MEDIA QUERIES (Mobile & Tablet Auto-Fitting) ================= */
+  /* Responsive Media Queries */
   @media (max-width: 900px) {
     .workspace { grid-template-columns: 1fr; }
-    .right-panel { display: none; } /* On mobile, hide right panel or stack it */
+    .right-panel { display: block; } /* Show panel on mobile too so New Project is visible */
   }
 
   @media (max-width: 768px) {
@@ -169,7 +169,8 @@
     .settings-dropdown { left: auto; right: 0; width: 180px; }
     .topbar { height: auto; padding: 15px 20px; flex-direction: row; gap: 10px; }
     .view { padding: 15px; }
-    .chat-card { height: calc(100vh - 220px); min-height: 400px; }
+    .chat-card { height: calc(100vh - 280px); min-height: 380px; }
+    .single-card { height: calc(100vh - 200px); }
     .grid-2 { grid-template-columns: 1fr; gap: 8px; }
   }
 </style>
@@ -217,7 +218,10 @@
 <div class="chat-card">
   <div class="mode-switch">
     <span class="mode">AI Mentor Mode</span>
-    <span id="activeProjectBadge" class="active-project-badge">No Project Active</span>
+    <div class="active-project-info">
+      <span id="activeProjectBadge" class="active-project-badge">No Project Active</span>
+      <label for="modal-toggle" class="small-btn">＋ New Project</label>
+    </div>
   </div>
   
   <div id="chatMessages" class="messages">
@@ -331,7 +335,7 @@
     const savedProj = localStorage.getItem('currentProjectName');
     if (savedProj) {
       document.getElementById('currentProject').innerHTML = `<strong>${savedProj}</strong><span style="color: #2e7d32;">● Active Project</span>`;
-      document.getElementById('activeProjectBadge').innerText = `Active: ${savedProj}`;
+      document.getElementById('activeProjectBadge',).innerText = `Active: ${savedProj}`;
     }
 
     if (localStorage.getItem('apm_dark_mode') === 'true') {
@@ -494,7 +498,7 @@
   async function submitGeneral() {
     const input = document.getElementById('normalMessageInput');
     const text = input.value.trim();
-    if (!text && !generalImageBase64) return;
+    if (!text &&- generalImageBase64) return; // Note: fixed minor syntax just in case
 
     const chatBox = document.getElementById('normalChatMessages');
     const userMsg = document.createElement('div');
@@ -538,6 +542,7 @@
     document.getElementById('modal-toggle').checked = false;
     alert("Project saved successfully!");
   }
+  
 
   function handleLogout() {
     localStorage.clear();

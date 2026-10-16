@@ -4,7 +4,7 @@ require('dotenv').config();
 const { GoogleGenAI } = require('@google/genai');
 
 const app = express();
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '20mb' }));
 app.use(cors());
 
 const PORT = process.env.PORT || 3000;
@@ -26,26 +26,34 @@ app.post('/api/chat', async (req, res) => {
   }
 
   try {
-    // Language matching instruction + Natural human tone + Group project info
-    let systemInstruction = `You are a friendly, natural human assistant. STRICT RULE: Reply in the EXACT SAME LANGUAGE that the user uses. If the user asks in Hindi, reply in Hindi (e.g. "मैं ठीक हूँ, बताओ क्या मदद चाहिए?"). If the user asks in English, reply in English (e.g. "I am fine, how can I help you?"). If the user speaks Hinglish, reply in Hinglish. Keep answers short, direct, and conversational without robotic long intros. If someone asks who made this, state that this is a group project built as a mini project and hosted by Prince.`;
+    let systemInstruction = `You are a friendly, natural human assistant. STRICT RULE: Reply in the EXACT SAME LANGUAGE that the user uses (Hindi if Hindi, English if English, Hinglish if Hinglish). Keep answers short, direct, and natural. If someone asks who made this, state that this is a group project built as a mini project and hosted by Prince.`;
     
     if (mode === "AI Mentor") {
-      systemInstruction = `You are a helpful project mentor guiding a student for their project '${projectName || "Software Project"}' (Semester: ${userSem || "N/A"}, Languages: ${userLangs || "General"}). STRICT RULE: Reply in the EXACT SAME LANGUAGE that the user uses (Hindi if user writes in Hindi, English if in English, Hinglish if in Hinglish). Keep answers short, direct, and natural. If someone asks who made this, state that this is a group project built as a mini project and hosted by Prince.`;
+      systemInstruction = `You are a helpful project mentor guiding a student for their project '${projectName || "Software Project"}' (Semester: ${userSem || "N/A"}, Languages: ${userLangs || "General"}). STRICT RULE: Reply in the exact same language the user uses. Keep answers short and direct. If someone asks who made this, state that this is a group project built as a mini project and hosted by Prince.`;
     }
 
-    let contents = message || "Please check this image.";
+    // Prepare contents array for text and image
+    let contents = [];
+    
     if (imageBase64) {
-      const matches = imageBase64.match(/^data:(.+);base64,(.+)$/);
-      if (matches) {
-        contents = [
-          { text: message || "Look at this image." },
-          { inlineData: { mimeType: matches[1], data: matches[2] } }
-        ];
-      }
+      // Clean base64 string if it contains data URI prefix
+      const base64Data = imageBase64.includes('base64,') ? imageBase64.split('base64,')[1] : imageBase64;
+      const mimeMatch = imageBase64.match(/data:([^;]+);base64/);
+      const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+
+      contents.push({
+        inlineData: {
+          mimeType: mimeType,
+          data: base64Data
+        }
+      });
+      contents.push(message || "Please identify this person or analyze this image.");
+    } else {
+      contents.push(message);
     }
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+      model: 'gemini-1.5-flash',
       contents: contents,
       config: {
         systemInstruction: systemInstruction,
