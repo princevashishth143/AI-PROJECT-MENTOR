@@ -14,19 +14,19 @@ if (btnMentor && btnChat) {
   btnMentor.addEventListener('click', () => {
     btnMentor.classList.add('active');
     btnChat.classList.remove('active');
-    mentorView.classList.remove('hidden');
-    chatView.classList.add('hidden');
+    if (mentorView) mentorView.classList.remove('hidden');
+    if (chatView) chatView.classList.add('hidden');
   });
 
   btnChat.addEventListener('click', () => {
     btnChat.classList.add('active');
     btnMentor.classList.remove('active');
-    chatView.classList.remove('hidden');
-    mentorView.classList.add('hidden');
+    if (chatView) chatView.classList.remove('hidden');
+    if (mentorView) mentorView.classList.add('hidden');
   });
 }
 
-// 4. Chat & Backend AI Call Logic (Secure & Fixed)
+// 4. Chat & Backend AI Call Logic (Fixed for Vercel)
 async function handleChatSubmit(e, formId, inputId, containerId, mode) {
   e.preventDefault();
   const input = document.getElementById(inputId);
@@ -66,8 +66,8 @@ async function handleChatSubmit(e, formId, inputId, containerId, mode) {
   const enhancedMessage = `[Context - Project: ${projectName}, Semester: ${userSem}, Known Languages: ${userLangs}] ${text}. Note: If the user asks about who made this project or what kind of project it is, state that this is a group project built as a mini project and hosted by Prince. Otherwise, focus purely on technical project mentorship.`;
 
   try {
-    // Call Live Render Backend
-    const response = await fetch('https://ai-project-mentor-5bka.onrender.com/api/chat', {
+    // FIXED: Call Vercel Relative API Path instead of old Render link
+    const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: enhancedMessage, mode: mode === 'mentor' ? 'AI Mentor' : 'General Chat', projectName })
@@ -77,9 +77,10 @@ async function handleChatSubmit(e, formId, inputId, containerId, mode) {
     const botMsgElement = document.getElementById(botLoadingId);
 
     let finalReply = "Failed to get response from backend.";
-    if (data.reply) {
+    if (data.reply || data.response) {
+      finalReply = data.reply || data.response;
       // Clean any generic AI references if returned
-      finalReply = data.reply.replace(/Gemini/gi, 'APM Assistant').replace(/Google/gi, 'Prince Vashishth');
+      finalReply = finalReply.replace(/Gemini/gi, 'APM Assistant').replace(/Google/gi, 'Prince Vashishth');
       if (botMsgElement) botMsgElement.textContent = finalReply;
     } else {
       finalReply = data.error || finalReply;
