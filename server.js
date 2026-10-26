@@ -5,29 +5,60 @@ require('dotenv').config();
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
-// Initialize Gemini API using the environment variable
+// Initialize Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// AI Chat Route
+// Main Chat API Route
 app.post('/api/chat', async (req, res) => {
   try {
-    const { prompt } = req.body;
+    const { message, mode, projectName, userSem, userLangs, imageBase64 } = req.body;
     
-    if (!prompt) {
-      return res.status(400).json({ error: 'Prompt is required' });
+    if (!message && !imageBase64) {
+      return res.status(400).json({ error: 'Message or image is required' });
     }
 
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const result = await model.generateContent(prompt);
+    
+    let promptText = `You are an expert AI Project Mentor. 
+    Context:
+    - Mode: ${mode || 'General'}
+    - Project Name: ${projectName || 'General Project'}
+    - Semester: ${userSem || 'N/A'}
+    - Technologies: ${userLangs || 'N/A'}
+
+    User Message: ${message}`;
+
+    let contents = [promptText];
+
+    // Handle Image if uploaded
+    if (imageBase64) {
+      const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+      const mimeTypeMatch = imageBase64.match(/data:(image\/\w+);base64,/);
+      const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/jpeg';
+
+      contents.push({
+        inlineData: {
+          data: base64Data,
+          mimeType: mimeType
+        }
+      });
+    }
+
+    const result = await model.generateContent(contents);
     const responseText = await result.response.text();
 
-    res.json({ success: true, response: responseText });
+    res.json({ reply: responseText });
   } catch (error) {
-    console.error('Error:', error);
+    console.error('API Error:', error);
     res.status(500).json({ error: error.message });
   }
+});
+
+// Root route
+app.get('/', (req, res) => {
+  res.send('APM - AI Project Mentor Backend is Running!');
 });
 
 // For local testing
@@ -38,5 +69,5 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-// Export for Vercel
+// Export for Vercel Serverless
 module.exports = app;

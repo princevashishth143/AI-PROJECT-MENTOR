@@ -157,7 +157,7 @@
   /* Responsive Media Queries */
   @media (max-width: 900px) {
     .workspace { grid-template-columns: 1fr; }
-    .right-panel { display: block; } /* Show panel on mobile too so New Project is visible */
+    .right-panel { display: block; }
   }
 
   @media (max-width: 768px) {
@@ -335,7 +335,7 @@
     const savedProj = localStorage.getItem('currentProjectName');
     if (savedProj) {
       document.getElementById('currentProject').innerHTML = `<strong>${savedProj}</strong><span style="color: #2e7d32;">● Active Project</span>`;
-      document.getElementById('activeProjectBadge',).innerText = `Active: ${savedProj}`;
+      document.getElementById('activeProjectBadge').innerText = `Active: ${savedProj}`;
     }
 
     if (localStorage.getItem('apm_dark_mode') === 'true') {
@@ -413,7 +413,8 @@
     const userSem = localStorage.getItem('currentProjectSem') || "N/A";
 
     try {
-      const response = await fetch('https://ai-project-mentor-5bka.onrender.com/api/chat', {
+      // FIXED: Using relative path so it works directly on Vercel seamlessly
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, mode, projectName, userSem, userLangs, imageBase64 })
@@ -498,7 +499,7 @@
   async function submitGeneral() {
     const input = document.getElementById('normalMessageInput');
     const text = input.value.trim();
-    if (!text &&- generalImageBase64) return; // Note: fixed minor syntax just in case
+    if (!text && !generalImageBase64) return;
 
     const chatBox = document.getElementById('normalChatMessages');
     const userMsg = document.createElement('div');
@@ -542,7 +543,6 @@
     document.getElementById('modal-toggle').checked = false;
     alert("Project saved successfully!");
   }
-  
 
   function handleLogout() {
     localStorage.clear();
