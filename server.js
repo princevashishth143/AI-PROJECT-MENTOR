@@ -32,9 +32,8 @@ app.post('/api/chat', async (req, res) => {
       systemInstruction = `You are a helpful project mentor guiding a student for their project '${projectName || "Software Project"}' (Semester: ${userSem || "N/A"}, Languages: ${userLangs || "General"}). STRICT RULE: Reply in the exact same language the user uses. Keep answers short and direct. If someone asks who made this, state that this is a group project built as a mini project and hosted by Prince.`;
     }
 
-    // यहाँ gemini-2.5-flash का उपयोग किया गया है
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       systemInstruction: systemInstruction
     });
 
