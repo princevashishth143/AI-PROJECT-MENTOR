@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const { GoogleGenAI } = require('@google/genai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
 app.use(express.json({ limit: '20mb' }));
@@ -16,7 +16,7 @@ if (!GEMINI_API_KEY) {
   console.log("✅ GEMINI_API_KEY successfully loaded!");
 }
 
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 app.post('/api/chat', async (req, res) => {
   const { message, mode, projectName, userSem, userLangs, imageBase64 } = req.body;
@@ -32,36 +32,33 @@ app.post('/api/chat', async (req, res) => {
       systemInstruction = `You are a helpful project mentor guiding a student for their project '${projectName || "Software Project"}' (Semester: ${userSem || "N/A"}, Languages: ${userLangs || "General"}). STRICT RULE: Reply in the exact same language the user uses. Keep answers short and direct. If someone asks who made this, state that this is a group project built as a mini project and hosted by Prince.`;
     }
 
-    // Prepare contents array for text and image
-    let contents = [];
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-flash',
+      systemInstruction: systemInstruction
+    });
+
+    let parts = [];
     
     if (imageBase64) {
-      // Clean base64 string if it contains data URI prefix
       const base64Data = imageBase64.includes('base64,') ? imageBase64.split('base64,')[1] : imageBase64;
       const mimeMatch = imageBase64.match(/data:([^;]+);base64/);
       const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
 
-      contents.push({
+      parts.push({
         inlineData: {
           mimeType: mimeType,
           data: base64Data
         }
       });
-      contents.push(message || "Please identify this person or analyze this image.");
+      parts.push(message || "Please analyze this image.");
     } else {
-      contents.push(message);
+      parts.push(message);
     }
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: contents,
-      config: {
-        systemInstruction: systemInstruction,
-        temperature: 0.7,
-      }
-    });
+    const result = await model.generateContent(parts);
+    const response = await result.response;
+    let aiReply = response.text();
 
-    let aiReply = response.text;
     if (aiReply) {
       aiReply = aiReply.replace(/Gemini/gi, 'Assistant').replace(/Google/gi, 'Prince');
       res.json({ reply: aiReply });
