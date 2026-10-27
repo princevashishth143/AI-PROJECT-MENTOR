@@ -7,11 +7,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Static files (HTML, JS, CSS) ko ek hi jagah serve karne ke liye
+// Static files (HTML, CSS, JS) serve karne ke liye
 app.use(express.static(path.join(__dirname)));
 
-// Initialize Gemini API
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const apiKey = process.env.GEMINI_API_KEY;
+console.log('--- SERVER STARTING ---');
+console.log('API Key Status:', apiKey ? 'Loaded Successfully!' : 'WARNING: GEMINI_API_KEY is missing!');
+
+const ai = new GoogleGenAI({ apiKey: apiKey });
+
+// Health check route taaki logs mein dikhe ki server live hai
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'Server is running live and healthy!' });
+});
 
 // Chat API Route
 app.post('/api/chat', async (req, res) => {
@@ -20,6 +28,10 @@ app.post('/api/chat', async (req, res) => {
     
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
+    }
+
+    if (!apiKey) {
+      return res.status(500).json({ error: 'Server error: GEMINI_API_KEY is not configured in Render Environment Variables.' });
     }
 
     const response = await ai.models.generateContent({
@@ -33,11 +45,11 @@ app.post('/api/chat', async (req, res) => {
     res.json({ reply: response.text });
   } catch (err) {
     console.error('Gemini API Error:', err);
-    res.status(500).json({ error: 'Failed to generate AI response. Please check API Key.' });
+    res.status(500).json({ error: 'Failed to generate AI response: ' + err.message });
   }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running smoothly on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[SUCCESS] Server is running smoothly on port ${PORT}`);
 });
