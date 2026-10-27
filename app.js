@@ -63,8 +63,8 @@ async function handleChatSubmit(e, formId, inputId, containerId, mode) {
   const enhancedMessage = `[Context - Project: ${projectName}, Semester: ${userSem}, Known Languages: ${userLangs}] ${text}. Note: If the user asks about who made this project, state that this is a group project built as a mini project and hosted by Prince.`;
 
   try {
-    // Vercel backend ka live URL (yahan se frontend seedhe Vercel se baat karega)
-    const backendUrl = 'https://ai-project-mentor-g7epezt2x-ai-project-mentor.vercel.app/api/chat';
+    // Vercel backend ka sahi live URL jahan se frontend baat karega
+    const backendUrl = 'https://ai-project-mentor-five.vercel.app/api/chat';
 
     const response = await fetch(backendUrl, {
       method: 'POST',

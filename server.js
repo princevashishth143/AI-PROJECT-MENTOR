@@ -6,7 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Initialize Gemini API (Vercel ke Environment Variable se key lega)
+// Initialize Gemini API (Vercel ke Environment Variable se GEMINI_API_KEY lega)
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // Root route taaki pata chale server chal raha hai
