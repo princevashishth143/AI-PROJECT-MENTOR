@@ -12,6 +12,29 @@ app.use(express.static(path.join(__dirname)));
 const apiKey = process.env.GEMINI_API_KEY;
 const ai = new GoogleGenAI({ apiKey: apiKey });
 
+// 503 हाई डिमांड एरर आने पर ऑटोमैटिक दोबारा कोशिश करने का फंक्शन
+async function generateWithRetry(model, contents, config, retries = 3, delay = 1000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await ai.models.generateContent({
+        model: model,
+        contents: contents,
+        config: config
+      });
+      return response;
+    } catch (err) {
+      const isOverloaded = err.status === 503 || (err.message && err.message.includes('503')) || (err.message && err.message.includes('high demand'));
+      if (isOverloaded && i < retries - 1) {
+        console.log(`High demand (503). Retrying attempt ${i + 2} in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2; // समय बढ़ाते हुए दोबारा ट्राई करेगा
+      } else {
+        throw err;
+      }
+    }
+  }
+}
+
 app.post('/api/chat', async (req, res) => {
   try {
     const { message, mode, projectName } = req.body;
@@ -24,13 +47,13 @@ app.post('/api/chat', async (req, res) => {
       return res.status(500).json({ error: 'API Key missing' });
     }
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: message,
-      config: {
+    const response = await generateWithRetry(
+      'gemini-3.8-flash',
+      message,
+      {
         systemInstruction: `You are an expert AI Project Mentor for the project "${projectName || 'Software Project'}". Provide thorough, detailed, and complete answers to help the user with coding, logic, architecture, and debugging in the language the user speaks.`
       }
-    });
+    );
 
     res.json({ reply: response.text });
   } catch (err) {
