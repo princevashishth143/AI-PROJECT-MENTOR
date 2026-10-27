@@ -12,27 +12,39 @@ app.use(express.static(path.join(__dirname)));
 const apiKey = process.env.GEMINI_API_KEY;
 const ai = new GoogleGenAI({ apiKey: apiKey });
 
-// 503 हाई डिमांड एरर आने पर ऑटोमैटिक दोबारा कोशिश करने का फंक्शन
-async function generateWithRetry(model, contents, config, retries = 3, delay = 1000) {
-  for (let i = 0; i < retries; i++) {
+// सभी वर्तमान और आने वाले लेटेस्ट मॉडल्स की फॉलबैक लिस्ट
+const MODELS_TO_TRY = [
+  'gemini-3.8-flash',
+  'gemini-4.2-flash',
+  'gemini-4.5-flash',
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash'
+];
+
+async function generateWithFallback(contents, config) {
+  let lastError = null;
+  
+  for (const modelName of MODELS_TO_TRY) {
     try {
+      console.log(`Trying model: ${modelName}`);
       const response = await ai.models.generateContent({
-        model: model,
+        model: modelName,
         contents: contents,
         config: config
       });
-      return response;
-    } catch (err) {
-      const isOverloaded = err.status === 503 || (err.message && err.message.includes('503')) || (err.message && err.message.includes('high demand'));
-      if (isOverloaded && i < retries - 1) {
-        console.log(`High demand (503). Retrying attempt ${i + 2} in ${delay}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        delay *= 2; // समय बढ़ाते हुए दोबारा ट्राई करेगा
-      } else {
-        throw err;
+      if (response && response.text) {
+        console.log(`Successfully generated using model: ${modelName}`);
+        return response;
       }
+    } catch (err) {
+      console.warn(`Model ${modelName} failed or unavailable:`, err.message || err);
+      lastError = err;
+      // अगर कोई मॉडल उपलब्ध नहीं है या बिजी है, तो यह तुरंत अगले मॉडल पर स्विच हो जाएगा
     }
   }
+  
+  throw lastError || new Error('All fallback models failed to generate content.');
 }
 
 app.post('/api/chat', async (req, res) => {
@@ -47,8 +59,7 @@ app.post('/api/chat', async (req, res) => {
       return res.status(500).json({ error: 'API Key missing' });
     }
 
-    const response = await generateWithRetry(
-      'gemini-3.8-flash',
+    const response = await generateWithFallback(
       message,
       {
         systemInstruction: `You are an expert AI Project Mentor for the project "${projectName || 'Software Project'}". Provide thorough, detailed, and complete answers to help the user with coding, logic, architecture, and debugging in the language the user speaks.`
@@ -57,8 +68,8 @@ app.post('/api/chat', async (req, res) => {
 
     res.json({ reply: response.text });
   } catch (err) {
-    console.error('API Error:', err);
-    res.status(500).json({ error: 'Server error: ' + err.message });
+    console.error('All AI models failed:', err);
+    res.status(500).json({ error: 'Server error: ' + (err.message || 'All models are currently busy.') });
   }
 });
 
