@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Static files (HTML, CSS, JS) serve karne ke liye
+// फ्रंटएंड की फाइलें सर्व करने के लिए
 app.use(express.static(path.join(__dirname)));
 
 const apiKey = process.env.GEMINI_API_KEY;
@@ -16,12 +16,12 @@ console.log('API Key Status:', apiKey ? 'Loaded Successfully!' : 'WARNING: GEMIN
 
 const ai = new GoogleGenAI({ apiKey: apiKey });
 
-// Health check route taaki logs mein dikhe ki server live hai
+// हेल्थ चेक रूट
 app.get('/api/health', (req, res) => {
   res.json({ status: 'Server is running live and healthy!' });
 });
 
-// Chat API Route
+// चैट एपीआई रूट (यहाँ हमने नया gemini-3.8-flash मॉडल सेट कर दिया है)
 app.post('/api/chat', async (req, res) => {
   try {
     const { message, mode, projectName } = req.body;
@@ -35,7 +35,7 @@ app.post('/api/chat', async (req, res) => {
     }
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.8-flash', // नया और लेटेस्ट मॉडल
       contents: message,
       config: {
         systemInstruction: `You are an AI Project Mentor for the project "${projectName || 'Software Project'}". Help students with code, logic, and debugging professionally.`
