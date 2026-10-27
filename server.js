@@ -1,18 +1,17 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { GoogleGenAI } = require('@google/genai');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Initialize Gemini API (Vercel ke Environment Variable se GEMINI_API_KEY lega)
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// Static files (HTML, JS, CSS) ko ek hi jagah serve karne ke liye
+app.use(express.static(path.join(__dirname)));
 
-// Root route taaki pata chale server chal raha hai
-app.get('/', (req, res) => {
-  res.send('APM - AI Project Mentor Backend is Running!');
-});
+// Initialize Gemini API
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // Chat API Route
 app.post('/api/chat', async (req, res) => {
@@ -38,10 +37,7 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-// Export for Vercel Serverless
-module.exports = app;
-
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-}
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running smoothly on port ${PORT}`);
+});
