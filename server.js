@@ -4,26 +4,52 @@ const path = require('path');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Badi images/data ke liye limit badha di hai
 
 app.use(express.static(path.join(__dirname)));
 
-// यहाँ हम Groq की API Key एनवायरनमेंट वेरिएबल से लेंगे
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message, mode, projectName } = req.body;
+    const { message, mode, projectName, image } = req.body;
     
-    if (!message) {
-      return res.status(400).json({ error: 'Message is required' });
+    if (!message && !image) {
+      return res.status(400).json({ error: 'Message or image is required' });
     }
 
     if (!GROQ_API_KEY) {
       return res.status(500).json({ error: 'GROQ_API_KEY is missing in environment variables on Render.' });
     }
 
-    // GroqCloud API को डायरेक्ट फेच (fetch) से कॉल करना
+    // Message aur agar image hai toh uska content prepare karna
+    let userContent = message || "Analyze this image.";
+    
+    // Agar frontend se image bheji gayi hai (camera/photo feature)
+    let messagesList = [
+      {
+        role: "system",
+        content: `You are an expert AI Project Mentor for the project "${projectName || 'Software Project'}". Provide thorough, detailed, and complete answers to help the user with coding, logic, architecture, and debugging in the language the user speaks.`
+      }
+    ];
+
+    if (image) {
+      // Agar image ke sath text bhejna ho
+      messagesList.push({
+        role: "user",
+        content: [
+          { type: "text", text: userContent },
+          { type: "image_url", image_url: { url: image } }
+        ]
+      });
+    } else {
+      messagesList.push({
+        role: "user",
+        content: userContent
+      });
+    }
+
+    // Groq API call (Model change karke llama-3.1-8b-instant kar diya hai taaki error na aaye)
     const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -31,17 +57,8 @@ app.post('/api/chat', async (req, res) => {
         'Authorization': `Bearer ${GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile', // Groq का सबसे तेज और पावरफुल मॉडल
-        messages: [
-          {
-            role: "system",
-            content: `You are an expert AI Project Mentor for the project "${projectName || 'Software Project'}". Provide thorough, detailed, and complete answers to help the user with coding, logic, architecture, and debugging in the language the user speaks.`
-          },
-          {
-            role: "user",
-            content: message
-          }
-        ],
+        model: 'llama-3.1-8b-instant', // Sabse stable aur fast model
+        messages: messagesList,
         stream: false
       })
     });
