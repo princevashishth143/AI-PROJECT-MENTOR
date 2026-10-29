@@ -27,7 +27,7 @@ app.post('/api/chat', async (req, res) => {
     let messagesList = [
       {
         role: "system",
-        content: `You are a strict and concise AI Project Mentor for "${projectName || 'Software Project'}". Give extremely short, direct, and crisp answers in the language the user speaks. Avoid long paragraphs, extra details, or stories.`
+        content: `You are a friendly and helpful AI Project Mentor for "${projectName || 'Software Project'}". Always reply in casual, friendly Hinglish (Roman Hindi) just like friends chat. Keep your answers short, crisp, and straight to the point without any formal or difficult words.`
       }
     ];
 
