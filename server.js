@@ -46,7 +46,6 @@ app.post('/api/chat', async (req, res) => {
       });
     }
 
-    // Yahan model badal kar sabse stable model laga diya hai
     const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -54,7 +53,7 @@ app.post('/api/chat', async (req, res) => {
         'Authorization': `Bearer ${GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'llama3-8b-8192', // Ye model 100% sabhi accounts par chalta hai
+        model: 'openai/gpt-oss-120b', 
         messages: messagesList,
         stream: false
       })
