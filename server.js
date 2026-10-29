@@ -8,8 +8,8 @@ app.use(express.json());
 
 app.use(express.static(path.join(__dirname)));
 
-// यहाँ हम OpenAI की API Key लेंगे
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+// यहाँ हम Groq की API Key एनवायरनमेंट वेरिएबल से लेंगे
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 app.post('/api/chat', async (req, res) => {
   try {
@@ -19,19 +19,19 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    if (!OPENAI_API_KEY) {
-      return res.status(500).json({ error: 'OPENAI_API_KEY is missing in environment variables on Render.' });
+    if (!GROQ_API_KEY) {
+      return res.status(500).json({ error: 'GROQ_API_KEY is missing in environment variables on Render.' });
     }
 
-    // OpenAI API को डायरेक्ट फेच (fetch) से कॉल करना (GPT-4o-mini या GPT-3.5-turbo का इस्तेमाल)
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // GroqCloud API को डायरेक्ट फेच (fetch) से कॉल करना
+    const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`
+        'Authorization': `Bearer ${GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini', // सबसे तेज, किफायती और बढ़िया मॉडल
+        model: 'llama-3.3-70b-versatile', // Groq का सबसे तेज और पावरफुल मॉडल
         messages: [
           {
             role: "system",
@@ -46,17 +46,17 @@ app.post('/api/chat', async (req, res) => {
       })
     });
 
-    const data = await openaiResponse.json();
+    const data = await groqResponse.json();
 
-    if (!openaiResponse.ok) {
-      throw new Error(data.error?.message || 'Failed to communicate with OpenAI API');
+    if (!groqResponse.ok) {
+      throw new Error(data.error?.message || 'Failed to communicate with Groq API');
     }
 
     const reply = data.choices[0].message.content;
     res.json({ reply });
 
   } catch (err) {
-    console.error('OpenAI API Error:', err);
+    console.error('Groq API Error:', err);
     res.status(500).json({ error: 'Server error: ' + err.message });
   }
 });
