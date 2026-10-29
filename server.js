@@ -4,7 +4,7 @@ const path = require('path');
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '10mb' })); // Badi images/data ke liye limit badha di hai
+app.use(express.json({ limit: '10mb' }));
 
 app.use(express.static(path.join(__dirname)));
 
@@ -22,10 +22,8 @@ app.post('/api/chat', async (req, res) => {
       return res.status(500).json({ error: 'GROQ_API_KEY is missing in environment variables on Render.' });
     }
 
-    // Message aur agar image hai toh uska content prepare karna
     let userContent = message || "Analyze this image.";
     
-    // Agar frontend se image bheji gayi hai (camera/photo feature)
     let messagesList = [
       {
         role: "system",
@@ -34,7 +32,6 @@ app.post('/api/chat', async (req, res) => {
     ];
 
     if (image) {
-      // Agar image ke sath text bhejna ho
       messagesList.push({
         role: "user",
         content: [
@@ -49,7 +46,7 @@ app.post('/api/chat', async (req, res) => {
       });
     }
 
-    // Groq API call (Model change karke llama-3.1-8b-instant kar diya hai taaki error na aaye)
+    // Groq API call - ab yahan screen shot ke hisab se sahi model set kar diya hai
     const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -57,7 +54,7 @@ app.post('/api/chat', async (req, res) => {
         'Authorization': `Bearer ${GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant', // Sabse stable aur fast model
+        model: 'llama-3.3-70b-versatile', // Groq ka sabse powerful aur active model[cite: 7]
         messages: messagesList,
         stream: false
       })
