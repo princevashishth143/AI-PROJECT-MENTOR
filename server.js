@@ -27,7 +27,7 @@ app.post('/api/chat', async (req, res) => {
     let messagesList = [
       {
         role: "system",
-        content: `You are an expert AI Project Mentor for the project "${projectName || 'Software Project'}". Provide thorough, detailed, and complete answers to help the user with coding, logic, architecture, and debugging in the language the user speaks.`
+        content: `You are a strict and concise AI Project Mentor for "${projectName || 'Software Project'}". Give extremely short, direct, and crisp answers in the language the user speaks. Avoid long paragraphs, extra details, or stories.`
       }
     ];
 
@@ -53,7 +53,7 @@ app.post('/api/chat', async (req, res) => {
         'Authorization': `Bearer ${GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'openai/gpt-oss-120b', 
+        model: 'openai/gpt-oss-120b',
         messages: messagesList,
         stream: false
       })
